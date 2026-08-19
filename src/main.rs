@@ -284,12 +284,12 @@ async fn main() {
         state.orbit.update(egui_wants_input, get_frame_time());
 
         // ── 3D Rendering ──
-        clear_background(Color::new(0.04, 0.04, 0.08, 1.0));
+        clear_background(Color::new(0.015, 0.015, 0.025, 1.0));
 
         set_camera(&state.orbit.camera());
 
         // Ground grid
-        draw_grid(20, 0.5, Color::new(0.15, 0.15, 0.2, 0.4), Color::new(0.1, 0.1, 0.15, 0.3));
+        draw_grid(20, 0.5, Color::new(0.12, 0.16, 0.24, 0.35), Color::new(0.05, 0.07, 0.12, 0.25));
 
         // Axes
         draw_axes();

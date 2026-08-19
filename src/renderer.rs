@@ -251,7 +251,7 @@ pub fn draw_lateral_view(params: &PowerSystemParams, particles: &[TrajectoryPart
     let py = sh - panel_h - 15.0;
 
     // Background
-    draw_rectangle(px, py, panel_w, panel_h, Color::new(0.08, 0.08, 0.12, 0.92));
+    draw_rectangle(px, py, panel_w, panel_h, Color::new(0.02, 0.02, 0.04, 0.95));
     draw_rectangle_lines(px, py, panel_w, panel_h, 2.0, Color::new(0.3, 0.6, 1.0, 0.6));
 
     draw_text("Lateral View  V(z1,z2)", px + 10.0, py + 18.0, 16.0, Color::new(0.7, 0.85, 1.0, 1.0));
