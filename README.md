@@ -1,10 +1,10 @@
 # Transient Energy & Lyapunov Function Stability Engine for Power System Frequency Control
 
-An interactive, high-fidelity 3D numerical simulation in Rust demonstrating direct stability certification of non-linear dynamical systems using **Lyapunov Energy Functions** and **Transient Energy Function (TEF)** methods. Built with [Macroquad](https://macroquad.rs/) for 3D hardware-accelerated viewport rendering and [egui](https://github.com/emilk/egui) for real-time control panels.
+An interactive, high-fidelity 3D numerical simulation in Rust demonstrating direct stability certification of non-linear dynamical systems using **Lyapunov Energy Functions** and **Transient Energy Fu[...] 
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Executive Summary & Motivation](#-executive-summary--motivation)
 2. [Theoretical & Mathematical Formulation](#-theoretical--mathematical-formulation)
@@ -26,26 +26,26 @@ An interactive, high-fidelity 3D numerical simulation in Rust demonstrating dire
    - [5.1 3D Orbit Camera Controls](#51-3d-orbit-camera-controls)
    - [5.2 Interactive `egui` Dashboard](#52-interactive-egui-dashboard)
    - [5.3 Lateral View Inset Panel](#53-lateral-view-inset-panel)
-6. [Building & Execution Guide](#-building--execution-guide)
-7. [Academic & Technical References](#-academic--technical-references)
+6. [Building & Execution Guide](#building--execution-guide)
+7. [Academic & Technical References](#academic--technical-references)
 
 ---
 
-## 🔬 Executive Summary & Motivation
+## Executive Summary & Motivation
 
-Traditional stability verification of large-scale non-linear power systems requires time-domain numerical integration of high-dimensional differential-algebraic equations (DAEs). While exact, time-domain simulation is computationally intensive and provides minimal analytical insight into the size of the region of attraction (ROA).
+Traditional stability verification of large-scale non-linear power systems requires time-domain numerical integration of high-dimensional differential-algebraic equations (DAEs). While exact, time[...]
 
-**Direct Methods via Lyapunov Functions** offer a mathematical framework to certify transient stability without solving trajectory equations explicitly. By defining a scalar Transient Energy Function $V(\mathbf{z})$ representing the system's kinetic and potential energy storage, engineers can construct invariant sublevel sets:
+**Direct Methods via Lyapunov Functions** offer a mathematical framework to certify transient stability without solving trajectory equations explicitly. By defining a scalar Transient Energy Function [...]
 
 $$S = \{ \mathbf{z} \in \mathbb{R}^2 \mid V(\mathbf{z}) \le c \}$$
 
-If a power system perturbation (e.g., fault clearing or sudden load change) leaves the state $\mathbf{z}(t_{clear})$ inside an invariant sublevel set $S$, the system is mathematically guaranteed to remain bounded and asymptotically return to the nominal operating equilibrium $p_0$.
+If a power system perturbation (e.g., fault clearing or sudden load change) leaves the state $\mathbf{z}(t_{clear})$ inside an invariant sublevel set $S$, the system is mathematically guaranteed t[...]
 
-This repository provides a high-performance, interactive 3D simulation of a **Single-Machine Infinite-Bus (SMIB)** system under frequency control, visualising the 3D energy surface $V(z_1, z_2)$, invariant level cuts ($V_{invar}, V_{lim}$), sublevel set contours, and dynamic state trajectories in real-time.
+This repository provides a high-performance, interactive 3D simulation of a **Single-Machine Infinite-Bus (SMIB)** system under frequency control, visualising the 3D energy surface $V(z_1, z_2)$, [...]
 
 ---
 
-## 📐 Theoretical & Mathematical Formulation
+## Theoretical & Mathematical Formulation
 
 ### 2.1 Synchronous Generator Swing Equation
 
@@ -141,7 +141,7 @@ To verify that $V(z_1, z_2)$ is a valid Lyapunov function, we examine its proper
 
 $$\mathbf{\dot{V}(z_1, z_2) = -D z_2^2 \le 0}$$
 
-Since $D > 0$, the energy derivative $\dot{V} \le 0$ is negative semi-definite everywhere. By **LaSalle's Invariance Principle**, the set of states where $\dot{V} = 0$ corresponds to $z_2 = 0$. Plugging $z_2 = 0$ into the state equation forces $\dot{z}_2 = \frac{1}{M}(P_m - P_{max}\sin(\delta_s + z_1)) = 0$, which holds only at the equilibrium point $p_0$. Therefore, $p_0$ is **locally asymptotically stable**.
+Since $D > 0$, the energy derivative $\dot{V} \le 0$ is negative semi-definite everywhere. By **LaSalle's Invariance Principle**, the set of states where $\dot{V} = 0$ corresponds to $z_2 = 0$. Pluggi[...] 
 
 ---
 
@@ -232,7 +232,7 @@ The positive and negative roots form a continuous closed contour loop rendered o
 
 ---
 
-## 💻 Software Architecture & Module Overview
+## Software Architecture & Module Overview
 
 The project is structured into 3 modular Rust source files:
 
@@ -277,7 +277,7 @@ Manages the application lifecycle:
 
 ---
 
-## 🕹️ User Interface & Simulation Control
+## User Interface & Simulation Control
 
 ### 5.1 3D Orbit & Pan Camera Controls
 
@@ -293,9 +293,9 @@ The floating UI window allows live manipulation:
 
 - **Power System Parameters**:
   - `Inertia M`: Slider from $0.02s$ to $0.50s$.
-  - `Damping D`: Slider from $0.00$ to $0.30\,pu$.
-  - `Mechanical Power Pm`: Slider from $0.10$ to $1.10\,pu$.
-  - `Max Power Pmax`: Slider from $0.50$ to $2.00\,pu$.
+  - `Damping D`: Slider from $0.00$ to $0.30\\,pu$.
+  - `Mechanical Power Pm`: Slider from $0.10$ to $1.10\\,pu$.
+  - `Max Power Pmax`: Slider from $0.50$ to $2.00\\,pu$.
 - **Level Set Controls**:
   - `V_invar`: Adjust invariant inner level set threshold.
   - `V_lim`: Adjust limit level set threshold.
@@ -317,7 +317,7 @@ Located in the bottom-right corner, this panel renders:
 
 ---
 
-## 🛠️ Building & Execution Guide
+## Building & Execution Guide
 
 ### Prerequisites
 
@@ -383,7 +383,7 @@ To compile and serve the simulation in a web browser:
 
 ---
 
-## 📚 Academic & Technical References
+## Academic & Technical References
 
 1. **Pai, M. A.** (1989). *Energy Function Analysis of Power System Stability*. Springer US.
 2. **Kundur, P.** (1994). *Power System Stability and Control*. McGraw-Hill.
@@ -393,6 +393,6 @@ To compile and serve the simulation in a web browser:
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for details.
