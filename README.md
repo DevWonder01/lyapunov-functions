@@ -346,6 +346,36 @@ Located in the bottom-right corner, this panel renders:
    cargo run --release
    ```
 
+### WebAssembly (WASM) Build
+
+To compile and serve the simulation in a web browser:
+
+1. **Add the WASM target**:
+   ```bash
+   rustup target add wasm32-unknown-unknown
+   ```
+
+2. **Compile to WASM**:
+   ```bash
+   cargo build --target wasm32-unknown-unknown --release
+   ```
+
+3. **Copy the compiled WASM binary**:
+   ```bash
+   cp target/wasm32-unknown-unknown/release/lyapunov-functions.wasm ./
+   ```
+
+4. **Serve locally using basic HTTP server**:
+   ```bash
+   # Using Python 3
+   python3 -m http.server 8080
+
+   # Or using basic-http-server
+   basic-http-server .
+   ```
+
+5. Open `http://localhost:8080` in your web browser to run the 3D WebGL simulation!
+
 3. **Run in Debug Mode**:
    ```bash
    cargo run
