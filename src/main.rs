@@ -45,13 +45,14 @@ impl CameraOrbit {
     }
 
     fn update(&mut self, egui_wants_input: bool, dt: f32) {
-        if egui_wants_input {
-            return;
-        }
-
-        // Auto-rotation when active and user is not manually orbiting
+        // Auto-rotation stays active as long as enabled and user is not manually dragging
         if self.auto_rotate && !is_mouse_button_down(MouseButton::Left) {
             self.yaw += 0.3 * dt;
+        }
+
+        // Manual mouse controls (rotate, pan, zoom) are ignored when interacting with egui UI
+        if egui_wants_input {
+            return;
         }
 
         // Left-click drag: Rotate/Orbit
@@ -98,6 +99,7 @@ struct SimState {
     params: PowerSystemParams,
     particles: Vec<TrajectoryParticle>,
     orbit: CameraOrbit,
+    theme: SurfaceTheme,
     show_solid: bool,
     show_planes: bool,
     show_contours: bool,
@@ -111,10 +113,26 @@ struct SimState {
     spawn_z2: f32,
 }
 
+impl SimState {
+    fn reset_all(&mut self) {
+        self.params = PowerSystemParams::default();
+        self.particles = vec![
+            TrajectoryParticle::new(0.8, 1.2, Color::new(1.0, 0.85, 0.0, 1.0)),
+            TrajectoryParticle::new(-0.5, -1.5, Color::new(1.0, 0.3, 0.6, 1.0)),
+            TrajectoryParticle::new(1.2, -0.8, Color::new(0.3, 1.0, 0.5, 1.0)),
+        ];
+        self.orbit.reset();
+        self.sim_speed = 1.0;
+        self.sim_running = true;
+        self.time = 0.0;
+        self.spawn_z1 = 0.6;
+        self.spawn_z2 = 1.0;
+    }
+}
+
 impl Default for SimState {
     fn default() -> Self {
         let params = PowerSystemParams::default();
-        // Default particles at different initial conditions
         let particles = vec![
             TrajectoryParticle::new(0.8, 1.2, Color::new(1.0, 0.85, 0.0, 1.0)),
             TrajectoryParticle::new(-0.5, -1.5, Color::new(1.0, 0.3, 0.6, 1.0)),
@@ -124,6 +142,7 @@ impl Default for SimState {
             params,
             particles,
             orbit: CameraOrbit::default(),
+            theme: SurfaceTheme::Cyberpunk,
             show_solid: true,
             show_planes: true,
             show_contours: true,
@@ -197,6 +216,17 @@ async fn main() {
                     ui.separator();
                     ui.heading("Visualization & Camera");
 
+                    ui.label("Color Theme:");
+                    egui::ComboBox::from_label("Surface Palette")
+                        .selected_text(state.theme.name())
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut state.theme, SurfaceTheme::Cyberpunk, SurfaceTheme::Cyberpunk.name());
+                            ui.selectable_value(&mut state.theme, SurfaceTheme::Magma, SurfaceTheme::Magma.name());
+                            ui.selectable_value(&mut state.theme, SurfaceTheme::Oceanic, SurfaceTheme::Oceanic.name());
+                            ui.selectable_value(&mut state.theme, SurfaceTheme::Plasma, SurfaceTheme::Plasma.name());
+                        });
+
+                    ui.add_space(4.0);
                     ui.checkbox(&mut state.show_solid, "Solid Surface");
                     ui.checkbox(&mut state.show_planes, "Level Planes");
                     ui.checkbox(&mut state.show_contours, "Sublevel Contours");
@@ -217,9 +247,11 @@ async fn main() {
                         if ui.button(if state.sim_running { "Pause" } else { "Run" }).clicked() {
                             state.sim_running = !state.sim_running;
                         }
-                        if ui.button("Reset").clicked() {
+                        if ui.button("Reset All / Start Over").clicked() {
+                            state.reset_all();
+                        }
+                        if ui.button("Clear Trajectories").clicked() {
                             state.particles.clear();
-                            state.time = 0.0;
                         }
                     });
 
@@ -288,14 +320,14 @@ async fn main() {
 
         set_camera(&state.orbit.camera());
 
-        // Ground grid
-        draw_grid(20, 0.5, Color::new(0.12, 0.16, 0.24, 0.35), Color::new(0.05, 0.07, 0.12, 0.25));
+        // Ground grid (subtle, low opacity)
+        draw_grid(24, 0.5, Color::new(0.18, 0.24, 0.36, 0.18), Color::new(0.08, 0.11, 0.18, 0.10));
 
         // Axes
         draw_axes();
 
         // Lyapunov surface
-        draw_lyapunov_surface(&state.params, state.show_solid);
+        draw_lyapunov_surface(&state.params, state.show_solid, state.theme);
 
         // Level planes
         if state.show_planes {

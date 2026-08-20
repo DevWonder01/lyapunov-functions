@@ -10,10 +10,85 @@ const Z2_RANGE: f32 = 3.5;
 /// Vertical scale for V values
 const V_SCALE: f32 = 3.0;
 
-/// Color palette inspired by the reference figure
-fn surface_color(v: f32, v_max: f32) -> Color {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SurfaceTheme {
+    Cyberpunk,   // Midnight Violet -> Neon Magenta -> Electric Cyan -> Gold
+    Magma,       // Dark Charcoal -> Deep Crimson -> Fiery Orange -> Radiant Gold
+    Oceanic,     // Abyssal Blue -> Turquoise -> Emerald Teal -> Spring Green
+    Plasma,      // Deep Sapphire -> Electric Cyan -> Emerald -> Amber -> Crimson
+}
+
+impl SurfaceTheme {
+    pub fn name(&self) -> &'static str {
+        match self {
+            SurfaceTheme::Cyberpunk => "Cyberpunk Neon",
+            SurfaceTheme::Magma => "Magma & Fire",
+            SurfaceTheme::Oceanic => "Deep Oceanic",
+            SurfaceTheme::Plasma => "Plasma & Spectral",
+        }
+    }
+}
+
+/// Dynamic color palette selector with directional diffuse shading
+fn surface_color(v: f32, v_max: f32, normal_shade: f32, theme: SurfaceTheme) -> Color {
     let t = (v / v_max).clamp(0.0, 1.0);
-    Color::new(0.0 + t * 0.2, 0.85 - t * 0.3, 0.9 - t * 0.4, 0.7)
+
+    let (r, g, b) = match theme {
+        SurfaceTheme::Cyberpunk => {
+            if t < 0.33 {
+                let s = t / 0.33;
+                (0.12 + s * 0.70, 0.05 + s * 0.05, 0.45 + s * 0.40)
+            } else if t < 0.66 {
+                let s = (t - 0.33) / 0.33;
+                (0.82 - s * 0.82, 0.10 + s * 0.75, 0.85 + s * 0.10)
+            } else {
+                let s = (t - 0.66) / 0.34;
+                (s * 1.0, 0.85 + s * 0.10, 0.95 - s * 0.85)
+            }
+        }
+        SurfaceTheme::Magma => {
+            if t < 0.33 {
+                let s = t / 0.33;
+                (0.08 + s * 0.67, 0.05 + s * 0.03, 0.18 - s * 0.08)
+            } else if t < 0.66 {
+                let s = (t - 0.33) / 0.33;
+                (0.75 + s * 0.23, 0.08 + s * 0.37, 0.10 - s * 0.05)
+            } else {
+                let s = (t - 0.66) / 0.34;
+                (0.98 + s * 0.02, 0.45 + s * 0.45, 0.05 + s * 0.15)
+            }
+        }
+        SurfaceTheme::Oceanic => {
+            if t < 0.33 {
+                let s = t / 0.33;
+                (0.02 + s * 0.02, 0.15 + s * 0.50, 0.45 + s * 0.40)
+            } else if t < 0.66 {
+                let s = (t - 0.33) / 0.33;
+                (0.04 + s * 0.01, 0.65 + s * 0.20, 0.85 - s * 0.20)
+            } else {
+                let s = (t - 0.66) / 0.34;
+                (0.05 + s * 0.40, 0.85 + s * 0.13, 0.65 - s * 0.20)
+            }
+        }
+        SurfaceTheme::Plasma => {
+            if t < 0.25 {
+                let s = t / 0.25;
+                (0.05 + s * 0.05, 0.25 + s * 0.45, 0.85 + s * 0.10)
+            } else if t < 0.50 {
+                let s = (t - 0.25) / 0.25;
+                (0.10 + s * 0.10, 0.70 + s * 0.25, 0.95 - s * 0.45)
+            } else if t < 0.75 {
+                let s = (t - 0.50) / 0.25;
+                (0.20 + s * 0.75, 0.95 - s * 0.10, 0.50 - s * 0.40)
+            } else {
+                let s = (t - 0.75) / 0.25;
+                (0.95 + s * 0.05, 0.85 - s * 0.65, 0.10 + s * 0.15)
+            }
+        }
+    };
+
+    let shadow = normal_shade.clamp(0.35, 1.0);
+    Color::new(r * shadow, g * shadow, b * shadow, 0.88)
 }
 
 /// Convert Color to [u8; 4] for Vertex
@@ -36,9 +111,10 @@ fn vert(pos: Vec3, uv: Vec2, color: Color) -> Vertex {
     }
 }
 
-/// Draw the wireframe surface of V(z₁, z₂)
-pub fn draw_lyapunov_surface(params: &PowerSystemParams, show_solid: bool) {
+/// Draw the 3D surface of V(z₁, z₂) with dynamic lighting and color theme
+pub fn draw_lyapunov_surface(params: &PowerSystemParams, show_solid: bool, theme: SurfaceTheme) {
     let v_max = params.v_lim * 1.5;
+    let light_dir = vec3(0.4, 1.0, 0.3).normalize();
 
     for i in 0..GRID_SIZE {
         for j in 0..GRID_SIZE {
@@ -57,11 +133,15 @@ pub fn draw_lyapunov_surface(params: &PowerSystemParams, show_solid: bool) {
             let p01 = vec3(z1_a, v01 * V_SCALE / v_max, z2_b);
             let p11 = vec3(z1_b, v11 * V_SCALE / v_max, z2_b);
 
+            // Compute surface normal for directional diffuse shading
+            let n0 = (p10 - p00).cross(p01 - p00).normalize();
+            let shade = 0.5 + 0.5 * n0.dot(light_dir).max(0.0);
+
             if show_solid {
-                let c00 = surface_color(v00, v_max);
-                let c10 = surface_color(v10, v_max);
-                let c01 = surface_color(v01, v_max);
-                let c11 = surface_color(v11, v_max);
+                let c00 = surface_color(v00, v_max, shade, theme);
+                let c10 = surface_color(v10, v_max, shade, theme);
+                let c01 = surface_color(v01, v_max, shade, theme);
+                let c11 = surface_color(v11, v_max, shade, theme);
 
                 let mesh = Mesh {
                     vertices: vec![
@@ -76,23 +156,28 @@ pub fn draw_lyapunov_surface(params: &PowerSystemParams, show_solid: bool) {
                 draw_mesh(&mesh);
             }
 
-            // Draw wireframe lines
-            let wire_col = Color::new(0.0, 0.6, 0.8, 0.5);
+            // Elegant, semi-transparent wireframe overlay
+            let wire_col = match theme {
+                SurfaceTheme::Cyberpunk => Color::new(0.9, 0.2, 0.9, 0.20),
+                SurfaceTheme::Magma => Color::new(1.0, 0.5, 0.1, 0.20),
+                SurfaceTheme::Oceanic => Color::new(0.0, 0.85, 0.7, 0.20),
+                SurfaceTheme::Plasma => Color::new(0.0, 0.85, 1.0, 0.18),
+            };
             draw_line_3d(p00, p10, wire_col);
             draw_line_3d(p00, p01, wire_col);
         }
     }
 }
 
-/// Draw horizontal invariant and limit planes
+/// Draw horizontal invariant and limit planes with glassmorphic transparency and glowing borders
 pub fn draw_level_planes(params: &PowerSystemParams) {
     let v_max = params.v_lim * 1.5;
     let y_invar = params.v_invar * V_SCALE / v_max;
     let y_lim = params.v_lim * V_SCALE / v_max;
     let extent = 3.5;
 
-    // Invariant plane
-    let ci = Color::new(0.3, 0.5, 1.0, 0.25);
+    // Invariant plane (Luminous Sapphire/Cyan)
+    let ci = Color::new(0.0, 0.45, 0.95, 0.28);
     let mesh_invar = Mesh {
         vertices: vec![
             vert(vec3(-extent, y_invar, -extent), vec2(0.0, 0.0), ci),
@@ -105,8 +190,8 @@ pub fn draw_level_planes(params: &PowerSystemParams) {
     };
     draw_mesh(&mesh_invar);
 
-    // Limit plane
-    let cl = Color::new(0.3, 1.0, 0.5, 0.2);
+    // Limit plane (Vibrant Spring Lime)
+    let cl = Color::new(0.15, 0.90, 0.35, 0.22);
     let mesh_lim = Mesh {
         vertices: vec![
             vert(vec3(-extent, y_lim, -extent), vec2(0.0, 0.0), cl),
@@ -119,9 +204,9 @@ pub fn draw_level_planes(params: &PowerSystemParams) {
     };
     draw_mesh(&mesh_lim);
 
-    // Plane border wireframes
-    let iw = Color::new(0.3, 0.5, 1.0, 0.8);
-    let lw = Color::new(0.3, 1.0, 0.5, 0.8);
+    // Glowing plane border lines
+    let iw = Color::new(0.0, 0.75, 1.0, 0.95);
+    let lw = Color::new(0.2, 1.0, 0.45, 0.95);
     for (y, c) in [(y_invar, iw), (y_lim, lw)] {
         draw_line_3d(vec3(-extent, y, -extent), vec3(extent, y, -extent), c);
         draw_line_3d(vec3(extent, y, -extent), vec3(extent, y, extent), c);
