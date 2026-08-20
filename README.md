@@ -3,6 +3,8 @@
 An interactive, high-fidelity 3D numerical simulation in Rust demonstrating direct stability certification of non-linear dynamical systems using **Lyapunov Energy Functions** and **Transient Energy Fu[...] 
 
 ---
+<img width="1446" height="899" alt="image" src="https://github.com/user-attachments/assets/503a8ce1-4e76-4a7c-8f38-a926a22a34c0" />
+
 
 ## Table of Contents
 
